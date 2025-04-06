@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vendor Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Vendor Dashboard</h1>
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages flash-success">
+              {% for message in messages %}
+                {{ message }}
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
+        <div class="card">
+            <h2>Welcome, {{ vendor.name }}</h2>
+            <div class="account-details">
+                <p><strong>Vendor ID:</strong> {{ vendor_id }}</p>
+                <p><strong>Wallet ID:</strong> {{ vendor.wallet_id }}</p>
+                <p><strong>Category:</strong> {{ vendor.category }}</p>
+            </div>
+            <div class="balance-card">
+                <h3>Your Balance</h3>
+                <div class="balance">{{ balance }} sats</div>
+            </div>
+            
+            <a href="{{ url_for('vendor_generate_invoice') }}" class="button">Generate New Invoice</a>
+        </div>
+        
+        <div class="card">
+            <h2>Your Recent Transactions</h2>
+            {% if vendor_transactions %}
+                <table>
+                    <tr>
+                        <th>Date</th>
+                        <th>Recipient</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                    {% for transaction in vendor_transactions %}
+                    <tr>
+                        <td>
+                            {% if transaction.date is defined %}
+                                {% if transaction.date is not string and transaction.date is not none %}
+                                    {{ transaction.date.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                    {{ transaction.date }}
+                                {% endif %}
+                            {% else %}
+                                Unknown date
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if transaction.recipient_id in recipients %}
+                                {{ recipients[transaction.recipient_id]['name'] }}
+                            {% else %}
+                                Unknown recipient
+                            {% endif %}
+                        </td>
+                        <td>{{ transaction.amount }} sats</td>
+                        <td>{{ transaction.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>No transactions yet.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <style>
+        .account-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .account-details p {
+            margin: 5px 0;
+        }
+    </style>
+</body>
+</html>

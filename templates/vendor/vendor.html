@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vendors</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Approved Vendors</h1>
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages flash-success">
+              {% for message in messages %}
+                {{ message }}
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
+        <div class="card">
+            <a href="{{ url_for('vendor_generate_invoice') }}" class="button">Generate Invoice</a>
+            <a href="{{ url_for('admin_dashboard') }}" class="button secondary">Back to Dashboard</a>
+            
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Wallet ID</th>
+                    <th>Category</th>
+                    <th>Actions</th>
+                </tr>
+                {% for id, vendor in vendors.items() %}
+                <tr>
+                    <td>{{ id }}</td>
+                    <td>{{ vendor.name }}</td>
+                    <td>{{ vendor.wallet_id }}</td>
+                    <td>{{ vendor.category }}</td>
+                    <td>
+                        <a href="{{ url_for('vendor_dashboard', vendor_id=id) }}" class="button small">Dashboard</a>
+                        <a href="#" class="button small">Edit</a>
+                        <a href="#" class="button small danger">Remove</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</body>
+</html>

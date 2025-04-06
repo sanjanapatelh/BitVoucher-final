@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Invoice</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Payment Invoice</h1>
+        
+        <div class="card">
+            <h2>Invoice Details</h2>
+            <div class="invoice-details">
+                <p><strong>Amount:</strong> {{ invoice.amount }} sats</p>
+                <p><strong>Description:</strong> {{ invoice.memo }}</p>
+                <p><strong>Status:</strong> <span id="payment-status">Waiting for payment...</span></p>
+                <p><strong>Created:</strong> <span>
+                {% if invoice.created_at is defined %}
+                    {% if invoice.created_at is not string and invoice.created_at is not none and invoice.created_at is defined %}
+                        {{ invoice.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                    {% else %}
+                        {{ invoice.created_at }}
+                    {% endif %}
+                {% else %}
+                    N/A
+                {% endif %}
+                </span></p>
+            </div>
+            
+            <div class="qr-container" id="qrcode">
+                <!-- QR code will be generated here -->
+            </div>
+            
+            <div class="invoice-code">
+                <p><strong>Lightning Invoice:</strong></p>
+                <textarea readonly>{{ invoice.payment_request }}</textarea>
+            </div>
+            
+            <div class="actions">
+                <button id="copy-button" class="button small">Copy Invoice</button>
+                <a href="{{ url_for('vendor_generate_invoice') }}" class="button">Generate New Invoice</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Generate QR code for the invoice
+        function generateQR(text) {
+            const qr = qrcode(0, 'M');
+            qr.addData(text);
+            qr.make();
+            
+            document.getElementById('qrcode').innerHTML = qr.createImgTag(5);
+        }
+        
+        // Generate QR code when page loads
+        window.onload = function() {
+            const invoice = "{{ invoice.payment_request }}";
+            generateQR(invoice);
+            
+            // Start checking payment status
+            checkPaymentStatus();
+        };
+        
+        // Check payment status every 5 seconds
+        function checkPaymentStatus() {
+            const paymentHash = "{{ invoice.payment_hash }}";
+            
+            // In a real implementation, this would call an API endpoint to check the status
+            // For now, we'll simulate this with a setTimeout
+            let checkCount = 0;
+            
+            function checkStatus() {
+                // This would be a fetch call to an API endpoint
+                // fetch('/api/check_payment/' + paymentHash)
+                
+                checkCount++;
+                if (checkCount > 10) {
+                    // For demo purposes, update status after 10 checks (50 seconds)
+                    document.getElementById('payment-status').textContent = 'Paid';
+                    document.getElementById('payment-status').classList.add('paid');
+                    return;
+                }
+                
+                setTimeout(checkStatus, 5000);
+            }
+            
+            checkStatus();
+        }
+        
+        // Copy invoice to clipboard
+        document.getElementById('copy-button').addEventListener('click', function() {
+            const textarea = document.querySelector('textarea');
+            textarea.select();
+            document.execCommand('copy');
+            this.textContent = 'Copied!';
+            setTimeout(() => {
+                this.textContent = 'Copy Invoice';
+            }, 2000);
+        });
+    </script>
+    
+    <style>
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .qr-container img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .invoice-code textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            font-family: monospace;
+            margin-bottom: 15px;
+        }
+        
+        .paid {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Bitcoin Subsidy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-4">
+        <h1 class="mb-4">Admin Dashboard</h1>
+        
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="alert alert-info" role="alert">
+            {% for message in messages %}
+            {{ message }}
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recipients</h5>
+                        <a href="{{ url_for('add_recipient') }}" class="btn btn-primary btn-sm">Add Recipient</a>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Wallet ID</th>
+                                    <th>Balance</th>
+                                    <th>Daily Limit</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for id, recipient in recipients.items() %}
+                                <tr>
+                                    <td>{{ id }}</td>
+                                    <td>{{ recipient.name }}</td>
+                                    <td>{{ recipient.wallet_id }}</td>
+                                    <td>
+                                        {% if recipient_balances and id in recipient_balances %}
+                                            {{ recipient_balances[id] }} sats
+                                        {% else %}
+                                            Loading...
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ recipient.daily_limit }} sats</td>
+                                    <td>
+                                        <a href="{{ url_for('fund_recipient', recipient_id=id) }}" class="btn btn-sm btn-success">Fund</a>
+                                        <a href="{{ url_for('recipient_dashboard', recipient_id=id) }}" class="btn btn-sm btn-secondary">View</a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No recipients found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Vendors</h5>
+                        <a href="{{ url_for('add_vendor') }}" class="btn btn-primary btn-sm">Add Vendor</a>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Wallet ID</th>
+                                    <th>Balance</th>
+                                    <th>Category</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for id, vendor in vendors.items() %}
+                                <tr>
+                                    <td>{{ id }}</td>
+                                    <td>{{ vendor.name }}</td>
+                                    <td>{{ vendor.wallet_id }}</td>
+                                    <td>
+                                        {% if vendor_balances and id in vendor_balances %}
+                                            {{ vendor_balances[id] }} sats
+                                        {% else %}
+                                            Loading...
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ vendor.category }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No vendors found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Transaction History</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Recipient</th>
+                                    <th>Vendor</th>
+                                    <th>Amount</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr>
+                                    <td>{{ transaction.id }}</td>
+                                    <td>
+                                        {% if transaction.date is defined %}
+                                            {% if transaction.date is not string and transaction.date is not none %}
+                                                {{ transaction.date.strftime('%Y-%m-%d %H:%M') }}
+                                            {% else %}
+                                                {{ transaction.date }}
+                                            {% endif %}
+                                        {% else %}
+                                            Unknown date
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ recipients[transaction.recipient_id].name if transaction.recipient_id in recipients else 'Unknown' }}</td>
+                                    <td>
+                                        {% if transaction.vendor_id == "admin" %}
+                                            System Admin
+                                        {% else %}
+                                            {{ vendors[transaction.vendor_id].name if transaction.vendor_id in vendors else 'Unknown' }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ transaction.amount }} sats</td>
+                                    <td>{{ transaction.type }}</td>
+                                    <td>
+                                        <span class="badge {% if transaction.status == 'complete' %}bg-success{% elif transaction.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ transaction.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No transactions found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
